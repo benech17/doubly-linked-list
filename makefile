@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS =-Wall -std=c11 -o
+CFLAGS =-Wall -std=c11 -o -lm
 SRC=$(wildcard *.c)
 EXEC=$(SRC:.c=.o)
 all:$(EXEC)

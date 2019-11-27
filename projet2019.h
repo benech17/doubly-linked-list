@@ -40,6 +40,17 @@ extern void* ld_next(void* ,void* );
 extern void* ld_previous(void* ,void* );
 extern void* ld_last(void* );
 extern void* ld_first(void* );
+extern void ld_destroy(void *);
+extern size_t ld_get(void *, void *, size_t , void *);
+extern void * ld_insert_first(void *, size_t , void *);
+extern void * ld_insert_last(void *, size_t , void *);
+extern void * ld_insert_before(void *,void*, size_t , void *);
+extern void * ld_insert_after(void *,void*, size_t , void *);
+void * ld_delete_node(void *liste, void *n);
+size_t ld_total_free_memory(void *liste);
+size_t ld_total_useful_memory(void *liste);
+void *ld_add_memory(void *liste, size_t nboctets);
+void *ld_compactify(void *liste);
 
 
 #endif

@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 #include <math.h>
 #include "projet2019.h"
 
+#define min(a,b) (a<=b?a:b)
 #define NTRANCHES 1024
 
 size_t nb_blocs(size_t n){
@@ -69,10 +71,44 @@ void * ld_create(size_t nboctets){
      }
  }
 
+ void ld_destroy(void *liste){
+     head* hd=liste;
+     free(hd->memory);
+     free(hd->libre);
+     free(hd);
+ }
 
-int main()
-{
-    printf("%ld\n",sizeof(align_data));
-    printf("%ld\n",nb_blocs(101));
-    return 0;
+ size_t ld_get(void *liste, void *current, size_t len, void *val){
+     head* hd=liste;
+     align_data* v=val;
+     node* cur=current;
+     len= min(len, cur->len);
+     memmove(v, cur->data , len*sizeof(align_data));
+     return len*sizeof(align_data);
+ }
+
+void * ld_insert_first(void *liste, size_t len, void *p_data){
+    // len :taille du node
+    head* hd=liste;
+    node* new_node;
+    new_node->data= (align_data*) p_data;
+    new_node->len=len;
+    node* first = ld_first(hd);
+    if(hd->nb_bloc_libre < len){
+        return NULL;
+    }
+    tranche* tab_tranche = hd->libre;
+    for(int i=0;i<NTRANCHES;i++){
+        if(tab_tranche[i].nb_blocs>= len){
+              tab_tranche[i].nb_blocs-=len;
+              hd->first=new_node;
+              new_node->previous=0;
+              new_node->next=first;
+              first->previous=new_node;
+              hd->nb_elem++;
+              hd->nb_bloc_libre--;
+              break;
+        }
+    }
+    return new_node;
 }

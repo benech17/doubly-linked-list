@@ -34,7 +34,7 @@ void * ld_create(size_t nboctets){
      if(head->nb_elem=0){
          return NULL;
      }
-     return (node*)(align_data*)(head->memory)+(head->first);
+     return (node*)(align_data*)(head->memory + head->first);
  }
 
  void* ld_last(void* liste){
@@ -91,23 +91,33 @@ void * ld_insert_first(void *liste, size_t len, void *p_data){
     // len :taille du node
     head* hd=liste;
     node* new_node;
-    new_node->data= (align_data*) p_data;
+    node* first_node = malloc(sizeof(node));
+    first_node->len=sizeof(node);
+    first_node->previous=0;
+    first_node->next=0;
+    memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
     new_node->len=len;
-    node* first = ld_first(hd);
+    
     if(hd->nb_bloc_libre < len){
         return NULL;
     }
     tranche* tab_tranche = hd->libre;
+
     for(int i=0;i<NTRANCHES;i++){
-        if(tab_tranche[i].nb_blocs>= len){
-              tab_tranche[i].nb_blocs-=len;
-              hd->first=new_node;
-              new_node->previous=0;
-              new_node->next=first;
-              first->previous=new_node;
-              hd->nb_elem++;
-              hd->nb_bloc_libre--;
-              break;
+        if(10000000>= nb_blocs(len)){
+            tab_tranche[i].nb_blocs-=len;
+            int dec=tab_tranche[i].decalage;
+            new_node->previous=0;
+            new_node->next= hd->first - dec;
+            first_node->previous = dec - hd->first;
+            hd->first = dec;
+            tab_tranche[i].decalage = dec + len;
+            tab_tranche[i].nb_blocs -= len;
+            hd->nb_elem++;
+            hd->nb_bloc_libre--;
+            memmove((align_data*) hd->memory+dec , new_node , len);
+            break;
+             
         }
     }
     return new_node;

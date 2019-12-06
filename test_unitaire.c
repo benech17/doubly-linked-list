@@ -22,6 +22,10 @@ void print(void* liste){
 }
 int main(){
     head* hd= ld_create(100);
-    print(hd);
+    align_data data[5]= {1,2,3,4,5};
+
+    ld_insert_first(hd,sizeof(node)+5*sizeof(align_data),data);
+   // printf("%d \n",hd->first);
+    printf("%ld \n", ((node*) ld_first(hd)) -> data[1]);
     return 0;
 }

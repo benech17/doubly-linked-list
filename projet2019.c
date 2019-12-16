@@ -91,34 +91,71 @@ void * ld_insert_first(void *liste, size_t len, void *p_data){
     // len :taille du node
     head* hd=liste;
     node* new_node;
-    node* first_node = malloc(sizeof(node));
-    first_node->len=sizeof(node);
-    first_node->previous=0;
-    first_node->next=0;
-    memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
-    new_node->len=len;
-    
-    if(hd->nb_bloc_libre < len){
+    node* first_node = ld_first(hd);
+   
+   
+   //le champ nb_bloc_libre me semble inutile??
+    if((hd->nb_bloc_libre) < nb_blocs(len)){
         return NULL;
     }
+
     tranche* tab_tranche = hd->libre;
 
     for(int i=0;i<NTRANCHES;i++){
-        if(10000000>= nb_blocs(len)){
-            tab_tranche[i].nb_blocs-=len;
+        if( tab_tranche[i].nb_blocs> nb_blocs(len)){
             int dec=tab_tranche[i].decalage;
+               
+            new_node = (node*)(align_data*)(hd->memory+dec); 
+              
             new_node->previous=0;
             new_node->next= hd->first - dec;
+            new_node->len=len;
+            memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
+
             first_node->previous = dec - hd->first;
             hd->first = dec;
-            tab_tranche[i].decalage = dec + len;
-            tab_tranche[i].nb_blocs -= len;
+            tab_tranche[i].decalage = dec + nb_blocs(len);
+            tab_tranche[i].nb_blocs -= nb_blocs(len);
             hd->nb_elem++;
             hd->nb_bloc_libre--;
-            memmove((align_data*) hd->memory+dec , new_node , len);
             break;
              
         }
     }
     return new_node;
+}
+
+
+int main(){
+    head* hd= ld_create(1000);
+    align_data data[5];
+    data->a=1;
+    (data+1)->a=2;
+    (data+2)->a=3;
+    (data+3)->a=4;
+    (data+4)->a=5;
+
+    align_data data2[3];
+    data2->a=10;
+    (data2+1)->a=20;
+    (data2+2)->a=30;
+    ld_insert_first(hd,sizeof(node)+5*sizeof(align_data),data);
+    printf("%ld \n", ((node*) ld_first(hd)) -> data[3].a); //print 4
+
+    ld_insert_first(hd,sizeof(node)+3*sizeof(align_data),data2);
+
+    printf("%ld \n", ((node*) ld_first(hd)) -> data[2].a); //print 30
+
+    align_data data3[6];
+    data3->a=-1;
+    (data3+1)->a=-2;
+    (data3+2)->a=-3;
+    (data3+3)->a=-4;
+    (data3+4)->a=-5;
+    (data3+5)->a=-6;
+    ld_insert_first(hd,sizeof(node)+sizeof(data3),data3);
+    printf("%ld \n", ((node*) ld_first(hd)) -> data[4].a); //print -5
+
+
+    return 0;
 }

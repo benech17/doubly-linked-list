@@ -13,7 +13,7 @@ size_t nb_blocs(size_t n){
     return ceil((double)n/(double)sizeof(align_data));
 }
 
-void * ld_create(size_t nboctets){
+void* ld_create(size_t nboctets){
     tranche* tab_tranches =malloc(NTRANCHES * sizeof(tranche));
     head* res=malloc(sizeof(head));
     res->size=nb_blocs(nboctets)*sizeof(align_data);
@@ -29,56 +29,56 @@ void * ld_create(size_t nboctets){
 
 }
 
- void * ld_first(void* liste){
+ void* ld_first(void* liste){
      head* head=liste;
-     if(head->nb_elem=0){
+     if(head->nb_elem==0){
          return NULL;
      }
      return (node*)(align_data*)(head->memory + head->first);
  }
 
  void* ld_last(void* liste){
-     head* head=liste;
-    if(head->nb_elem=0){
+    head* head=liste;
+    if(head->nb_elem==0){
          return NULL;
     }
-    return (node*)(align_data*)(head->memory)+(head->last);
+    return (node*)(align_data*)(head->memory + head->last);
  }
 
  void* ld_next(void* liste,void* current){
      head* head=liste;
-     if(liste==current){
+     if((node*)liste==(node*)current){
          return ld_first(liste);
      }
      node* noeud=current;
      if(noeud->next=0){
          return NULL;
      }else{
-         return (node*)(align_data*)(head->memory)+(noeud->next);
+         return (node*)(align_data*)(head->memory + noeud->next);
      }
  }
 
  void* ld_previous(void* liste,void* current){
      head* head=liste;
-     if(liste==current){
+     if((node*)liste==(node*)current){
          return ld_first(liste);
      }
      node* noeud=current;
      if(noeud->previous=0){
          return NULL;
      }else{
-         return (node*)(align_data*)(head->memory)+(noeud->previous);
+         return (node*)(align_data*)(head->memory + noeud->previous);
      }
  }
 
- void ld_destroy(void *liste){
+ void ld_destroy(void* liste){
      head* hd=liste;
      free(hd->memory);
      free(hd->libre);
      free(hd);
  }
 
- size_t ld_get(void *liste, void *current, size_t len, void *val){
+ size_t ld_get(void* liste, void* current, size_t len, void* val){
      head* hd=liste;
      align_data* v=val;
      node* cur=current;
@@ -87,12 +87,12 @@ void * ld_create(size_t nboctets){
      return len*sizeof(align_data);
  }
 
-void * ld_insert_first(void *liste, size_t len, void *p_data){
+void* ld_insert_first(void* liste, size_t len, void* p_data){
     // len :taille du node
     head* hd=liste;
     node* new_node;
     node* first_node = ld_first(hd);
-   
+    
    
    //le champ nb_bloc_libre me semble inutile??
     if((hd->nb_bloc_libre) < nb_blocs(len)){
@@ -104,7 +104,7 @@ void * ld_insert_first(void *liste, size_t len, void *p_data){
     for(int i=0;i<NTRANCHES;i++){
         if( tab_tranche[i].nb_blocs> nb_blocs(len)){
             int dec=tab_tranche[i].decalage;
-               
+            printf("dec: %d\n",dec);
             new_node = (node*)(align_data*)(hd->memory+dec); 
               
             new_node->previous=0;
@@ -112,12 +112,65 @@ void * ld_insert_first(void *liste, size_t len, void *p_data){
             new_node->len=len;
             memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
 
-            first_node->previous = dec - hd->first;
+            if(first_node!=NULL)
+                first_node->previous = dec - hd->first;
+
             hd->first = dec;
+
+            if(hd->nb_elem==0){
+                hd->last= dec;
+            }
             tab_tranche[i].decalage = dec + nb_blocs(len);
             tab_tranche[i].nb_blocs -= nb_blocs(len);
+
             hd->nb_elem++;
             hd->nb_bloc_libre--;
+
+            break;
+             
+        }
+    }
+    return new_node;
+}
+
+void* ld_insert_last(void* liste, size_t len, void* p_data){
+    // len :taille du node
+    head* hd=liste;
+    node* new_node;
+    node* last_node = ld_last(hd);
+    
+   
+   //le champ nb_bloc_libre me semble inutile??
+    if((hd->nb_bloc_libre) < nb_blocs(len)){
+        return NULL;
+    }
+
+    tranche* tab_tranche = hd->libre;
+
+    for(int i=0;i<NTRANCHES;i++){
+        if( tab_tranche[i].nb_blocs> nb_blocs(len)){
+            int dec=tab_tranche[i].decalage;
+            new_node = (node*)(align_data*)(hd->memory+dec); 
+              
+            new_node->previous= hd->last - dec;
+            new_node->next= 0;
+            new_node->len=len;
+            memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
+
+            if(last_node!=NULL)
+                last_node->next = dec - hd->last;
+
+            hd->last = dec;
+
+            if(hd->nb_elem==0){
+                hd->first= dec;
+            }
+            tab_tranche[i].decalage = dec + nb_blocs(len);
+            tab_tranche[i].nb_blocs -= nb_blocs(len);
+
+            hd->nb_elem++;
+            hd->nb_bloc_libre--;
+
             break;
              
         }
@@ -128,23 +181,17 @@ void * ld_insert_first(void *liste, size_t len, void *p_data){
 
 int main(){
     head* hd= ld_create(1000);
-    align_data data[5];
-    data->a=1;
-    (data+1)->a=2;
-    (data+2)->a=3;
-    (data+3)->a=4;
-    (data+4)->a=5;
+    align_data data1[5];
+    data1->a=1;
+    (data1+1)->a=2;
+    (data1+2)->a=3;
+    (data1+3)->a=4;
+    (data1+4)->a=5;
 
     align_data data2[3];
     data2->a=10;
     (data2+1)->a=20;
     (data2+2)->a=30;
-    ld_insert_first(hd,sizeof(node)+5*sizeof(align_data),data);
-    printf("%ld \n", ((node*) ld_first(hd)) -> data[3].a); //print 4
-
-    ld_insert_first(hd,sizeof(node)+3*sizeof(align_data),data2);
-
-    printf("%ld \n", ((node*) ld_first(hd)) -> data[2].a); //print 30
 
     align_data data3[6];
     data3->a=-1;
@@ -153,9 +200,26 @@ int main(){
     (data3+3)->a=-4;
     (data3+4)->a=-5;
     (data3+5)->a=-6;
-    ld_insert_first(hd,sizeof(node)+sizeof(data3),data3);
-    printf("%ld \n", ((node*) ld_first(hd)) -> data[4].a); //print -5
 
+    ld_insert_first(hd,sizeof(node)+sizeof(data1),data1);
+    printf("%ld \n", ((node*) ld_last(hd)) -> len); 
+
+    //printf("%ld \n", ((node*) ld_first(hd)) -> data[3].a); //print 4
+
+    ld_insert_first(hd,sizeof(node)+sizeof(data2),data2);
+    printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
+
+    //printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
+    
+
+    //printf("%ld \n", ((node*) ld_first(hd)) -> data[2].a); //print 30
+
+    ld_insert_first(hd,sizeof(node)+sizeof(data3),data3);
+    //printf("%ld \n", ((node*) ld_first(hd)) -> data[4].a); //print -5
+    printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
+   
+    
+    
 
     return 0;
 }

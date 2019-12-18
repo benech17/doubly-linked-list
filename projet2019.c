@@ -30,44 +30,44 @@ void* ld_create(size_t nboctets){
 }
 
  void* ld_first(void* liste){
-     head* head=liste;
-     if(head->nb_elem==0){
+     head* hd=liste;
+     if(hd->nb_elem==0){
          return NULL;
      }
-     return (node*)(align_data*)(head->memory + head->first);
+     return (node*)(align_data*)(hd->memory + hd->first);
  }
 
  void* ld_last(void* liste){
-    head* head=liste;
-    if(head->nb_elem==0){
+    head* hd=liste;
+    if(hd->nb_elem==0){
          return NULL;
     }
-    return (node*)(align_data*)(head->memory + head->last);
+    return (node*)(align_data*)(hd->memory + hd->last);
  }
 
  void* ld_next(void* liste,void* current){
-     head* head=liste;
-     if((node*)liste==(node*)current){
+     head* hd=liste;
+     if((head*)liste==(head*)current){
          return ld_first(liste);
      }
      node* noeud=current;
-     if(noeud->next=0){
+     if(noeud->next==0){
          return NULL;
      }else{
-         return (node*)(align_data*)(head->memory + noeud->next);
+         return (node*)(align_data*)(hd->memory + noeud->next);
      }
  }
 
  void* ld_previous(void* liste,void* current){
-     head* head=liste;
-     if((node*)liste==(node*)current){
+     head* hd=liste;
+     if((head*)liste==(head*)current){
          return ld_first(liste);
      }
      node* noeud=current;
-     if(noeud->previous=0){
+     if(noeud->previous==0){
          return NULL;
      }else{
-         return (node*)(align_data*)(head->memory + noeud->previous);
+         return (node*)(align_data*)(hd->memory + noeud->previous);
      }
  }
 
@@ -87,6 +87,18 @@ void* ld_create(size_t nboctets){
      return len*sizeof(align_data);
  }
 
+static int index_of_node(void* liste, void* n){
+    head* hd=liste;
+    node* nd=n;
+    node* curr=(node*)(align_data*)(hd->memory + hd->first);
+
+    int i=hd->first;
+    while(curr!=NULL && curr!=nd){
+        i+=curr->next;
+        curr=(node*)(align_data*)(hd->memory + curr->next);
+    }
+    return i;
+}
 void* ld_insert_first(void* liste, size_t len, void* p_data){
     // len :taille du node
     head* hd=liste;
@@ -126,11 +138,11 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
             hd->nb_elem++;
             hd->nb_bloc_libre--;
 
-            break;
+            return new_node;
              
         }
     }
-    return new_node;
+    return NULL;
 }
 
 void* ld_insert_last(void* liste, size_t len, void* p_data){
@@ -171,13 +183,102 @@ void* ld_insert_last(void* liste, size_t len, void* p_data){
             hd->nb_elem++;
             hd->nb_bloc_libre--;
 
-            break;
+            return new_node;
              
         }
     }
-    return new_node;
+    return NULL;
 }
 
+void* ld_insert_before(void* liste, void* n, size_t len, void* p_data){
+      // len :taille du node
+    head* hd=liste;
+    node* new_node;
+    node* curr = n;
+    node* prev;
+    if(curr->previous==0)
+        return ld_insert_first(hd,len,p_data);
+
+    prev= (node*)(align_data*)(curr + curr->previous);
+    int curr_index=index_of_node(hd,curr);
+   
+    if((hd->nb_bloc_libre) < nb_blocs(len)){
+        return NULL;
+    }
+
+    tranche* tab_tranche = hd->libre;
+
+    for(int i=0;i<NTRANCHES;i++){
+        if( tab_tranche[i].nb_blocs> nb_blocs(len)){
+            int dec=tab_tranche[i].decalage;
+            new_node = (node*)(align_data*)(hd->memory + dec); 
+              
+            new_node->previous= curr->previous - dec + curr_index;
+            new_node->next= curr_index - dec;
+            new_node->len=len;
+            memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
+             
+            prev->next -= (curr_index - dec);
+
+            curr->previous= dec -curr_index;
+
+            tab_tranche[i].decalage = dec + nb_blocs(len);
+            tab_tranche[i].nb_blocs -= nb_blocs(len);
+
+            hd->nb_elem++;
+            hd->nb_bloc_libre--;
+
+            return new_node;
+             
+        }
+    }
+    return NULL;
+}
+
+void* ld_insert_after(void* liste, void* n, size_t len, void* p_data){
+      // len :taille du node
+    head* hd=liste;
+    node* new_node;
+    node* curr = n;
+    node* next;
+    if(curr->next==0)
+        return ld_insert_last(hd,len,p_data);
+
+    next= (node*)(align_data*)(curr + curr->next);
+    int curr_index=index_of_node(hd,curr);
+   
+    if((hd->nb_bloc_libre) < nb_blocs(len)){
+        return NULL;
+    }
+
+    tranche* tab_tranche = hd->libre;
+
+    for(int i=0;i<NTRANCHES;i++){
+        if( tab_tranche[i].nb_blocs> nb_blocs(len)){
+            int dec=tab_tranche[i].decalage;
+            new_node = (node*)(align_data*)(hd->memory + dec); 
+              
+            new_node->previous= curr_index - dec;
+            new_node->next= curr->next - (dec - curr_index);
+            new_node->len=len;
+            memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
+             
+            next->previous = -(new_node->next);
+
+            curr->next = dec - curr_index;
+
+            tab_tranche[i].decalage = dec + nb_blocs(len);
+            tab_tranche[i].nb_blocs -= nb_blocs(len);
+
+            hd->nb_elem++;
+            hd->nb_bloc_libre--;
+
+            return new_node;
+             
+        }
+    }
+    return NULL;
+}
 
 int main(){
     head* hd= ld_create(1000);
@@ -202,6 +303,7 @@ int main(){
     (data3+5)->a=-6;
 
     ld_insert_first(hd,sizeof(node)+sizeof(data1),data1);
+
     printf("%ld \n", ((node*) ld_last(hd)) -> len); 
 
     //printf("%ld \n", ((node*) ld_first(hd)) -> data[3].a); //print 4
@@ -217,8 +319,10 @@ int main(){
     ld_insert_first(hd,sizeof(node)+sizeof(data3),data3);
     //printf("%ld \n", ((node*) ld_first(hd)) -> data[4].a); //print -5
     printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
+
+    // node* n = (node*)(align_data*)(hd->memory + 0);
    
-    
+    // printf("%d\n",index_of_node(hd,n));
     
 
     return 0;

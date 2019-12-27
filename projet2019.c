@@ -8,6 +8,7 @@
 
 #define min(a,b) (a<=b?a:b)
 #define NTRANCHES 1024
+#define nsize(x) (sizeof(x) + sizeof(node))
 
 size_t nb_blocs(size_t n){
     return ceil((double)n/(double)sizeof(align_data));
@@ -54,7 +55,7 @@ void* ld_create(size_t nboctets){
      if(noeud->next==0){
          return NULL;
      }else{
-         return (node*)(align_data*)(hd->memory + noeud->next);
+         return (node*)(align_data*)(noeud + noeud->next);
      }
  }
 
@@ -67,7 +68,7 @@ void* ld_create(size_t nboctets){
      if(noeud->previous==0){
          return NULL;
      }else{
-         return (node*)(align_data*)(hd->memory + noeud->previous);
+         return (node*)(align_data*)(noeud + noeud->previous);
      }
  }
 
@@ -92,21 +93,21 @@ static int index_of_node(void* liste, void* n){
     node* nd=n;
     node* curr=(node*)(align_data*)(hd->memory + hd->first);
 
-    int i=hd->first;
+    int i=1;
     while(curr!=NULL && curr!=nd){
-        i+=curr->next;
+        //i+=curr->next;
         curr=(node*)(align_data*)(hd->memory + curr->next);
     }
     return i;
 }
+
 void* ld_insert_first(void* liste, size_t len, void* p_data){
     // len :taille du node
     head* hd=liste;
     node* new_node;
     node* first_node = ld_first(hd);
+
     
-   
-   //le champ nb_bloc_libre me semble inutile??
     if((hd->nb_bloc_libre) < nb_blocs(len)){
         return NULL;
     }
@@ -117,18 +118,27 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
         if( tab_tranche[i].nb_blocs> nb_blocs(len)){
             int dec=tab_tranche[i].decalage;
             printf("dec: %d\n",dec);
-            new_node = (node*)(align_data*)(hd->memory+dec); 
+            new_node = (node*)(align_data*)(hd->memory + dec); 
               
+            if(first_node!=NULL)
+                    printf("t1 %ld\n",first_node->len); //print la bonne valeur!
             new_node->previous=0;
+            
+            if(first_node!=NULL)
+                    printf("t2 %ld\n",first_node->len); //print la mauvaise valeur 0 !
+
             new_node->next= hd->first - dec;
+            
             new_node->len=len;
+            
             memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
 
-            if(first_node!=NULL)
+            if(first_node!=NULL){
                 first_node->previous = dec - hd->first;
-
+            }
+          
             hd->first = dec;
-
+          
             if(hd->nb_elem==0){
                 hd->last= dec;
             }
@@ -138,6 +148,7 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
             hd->nb_elem++;
             hd->nb_bloc_libre--;
 
+       
             return new_node;
              
         }
@@ -198,9 +209,9 @@ void* ld_insert_before(void* liste, void* n, size_t len, void* p_data){
     node* prev;
     if(curr->previous==0)
         return ld_insert_first(hd,len,p_data);
+    //donc prev n'est pas NULL
 
-    prev= (node*)(align_data*)(curr + curr->previous);
-    int curr_index=index_of_node(hd,curr);
+    prev= (node*)ld_previous(hd,curr);
    
     if((hd->nb_bloc_libre) < nb_blocs(len)){
         return NULL;
@@ -213,14 +224,15 @@ void* ld_insert_before(void* liste, void* n, size_t len, void* p_data){
             int dec=tab_tranche[i].decalage;
             new_node = (node*)(align_data*)(hd->memory + dec); 
               
-            new_node->previous= curr->previous - dec + curr_index;
-            new_node->next= curr_index - dec;
+            new_node->previous= curr->previous + (curr-new_node);
+            new_node->next= curr-new_node;
             new_node->len=len;
             memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
              
-            prev->next -= (curr_index - dec);
 
-            curr->previous= dec -curr_index;
+            curr->previous= new_node-curr;
+            
+            prev->next -= (curr - new_node); //la ligne qui provoque segmentation fault!
 
             tab_tranche[i].decalage = dec + nb_blocs(len);
             tab_tranche[i].nb_blocs -= nb_blocs(len);
@@ -280,6 +292,11 @@ void* ld_insert_after(void* liste, void* n, size_t len, void* p_data){
     return NULL;
 }
 
+size_t ld_total_free_memory(void *liste){
+    head* hd= liste;
+    return (size_t)(hd->nb_bloc_libre * sizeof(align_data));
+}
+
 int main(){
     head* hd= ld_create(1000);
     align_data data1[5];
@@ -302,28 +319,30 @@ int main(){
     (data3+4)->a=-5;
     (data3+5)->a=-6;
 
-    ld_insert_first(hd,sizeof(node)+sizeof(data1),data1);
+    node* n = (node*)(align_data*)(hd->memory + 0);
 
-    printf("%ld \n", ((node*) ld_last(hd)) -> len); 
+    ld_insert_first(hd,nsize(data1),data1);
+    printf("%ld\n",n->len);
+
+
+    //printf("last1 :%ld \n", ((node*) ld_last(hd)) -> len); 
 
     //printf("%ld \n", ((node*) ld_first(hd)) -> data[3].a); //print 4
 
-    ld_insert_first(hd,sizeof(node)+sizeof(data2),data2);
-    printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
+    ld_insert_first(hd,nsize(data2),data2);
 
-    //printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
-    
+    //printf("last2: %ld \n", ((node*) ld_last(hd)) -> len); bug
+    printf("%ld\n",n->len); //bug
 
     //printf("%ld \n", ((node*) ld_first(hd)) -> data[2].a); //print 30
 
-    ld_insert_first(hd,sizeof(node)+sizeof(data3),data3);
+    ld_insert_first(hd,nsize(data3),data3);
     //printf("%ld \n", ((node*) ld_first(hd)) -> data[4].a); //print -5
-    printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
 
-    // node* n = (node*)(align_data*)(hd->memory + 0);
-   
-    // printf("%d\n",index_of_node(hd,n));
+    //printf("last3 : %ld \n", ((node*) ld_last(hd)) -> len); bug
+
+   printf("%ld\n",n->len); //bug
     
-
+   // ld_insert_before(hd,n,nsize(data2),data2);
     return 0;
 }

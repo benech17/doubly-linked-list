@@ -29,8 +29,8 @@ typedef struct{
     size_t nb_bloc_libre;
 } head;
 
-extern size_t nb_blocs(size_t );
-extern void* ld_create(size_t );
+extern size_t nb_blocs(size_t);
+extern void* ld_create(size_t);
 extern void* ld_first(void*);
 extern void* ld_last(void*);
 extern void* ld_next(void*, void*);
@@ -43,10 +43,10 @@ extern void* ld_insert_first(void*, size_t, void*);
 extern void* ld_insert_last(void*, size_t, void*);
 extern void* ld_insert_before(void*, void*, size_t, void*);
 extern void* ld_insert_after(void*, void*, size_t, void*);
-extern void* ld_delete_node(void* , void* );
-extern size_t ld_total_free_memory(void* );
-extern size_t ld_total_useful_memory(void* );
-extern void* ld_add_memory(void* , size_t );
-extern void* ld_compactify(void* );
+extern void* ld_delete_node(void* , void*);
+extern size_t ld_total_free_memory(void*);
+extern size_t ld_total_useful_memory(void*);
+extern void* ld_add_memory(void* , size_t);
+extern void* ld_compactify(void*);
 
 #endif

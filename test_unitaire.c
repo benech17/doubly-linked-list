@@ -57,7 +57,12 @@ int main(){
     ld_insert_first(hd,sizeof(data3),data3);
     ld_insert_before(hd,n,sizeof(data4),data4);
 
+
     print(hd);
     
+    ld_delete_node(hd,ld_previous(hd,n));
+
+    print(hd);
+
     return 0;
 }

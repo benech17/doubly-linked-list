@@ -24,7 +24,7 @@ static int recherche_binaire(void* tab,int size,ptrdiff_t dec){
     }
     return -1;
 }
-static void* dec_to_pointer(void* p, ptrdiff_t dec){
+void* dec_to_pointer(void* p, ptrdiff_t dec){
     return ((align_data*)(p) + dec);
 }
 
@@ -373,68 +373,3 @@ size_t ld_total_free_memory(void *liste){
     return (size_t)(hd->nb_bloc_libre * sizeof(align_data));
 }
 
-
-int main(){
-    head* hd= ld_create(1000);
-    align_data data1[5];
-    data1->a=1;
-    (data1+1)->a=2;
-    (data1+2)->a=3;
-    (data1+3)->a=4;
-    (data1+4)->a=5;
-
-    align_data data2[3];
-    data2->a=10;
-    (data2+1)->a=20;
-    (data2+2)->a=30;
-
-    align_data data3[6];
-    data3->a=-1;
-    (data3+1)->a=-2;
-    (data3+2)->a=-3;
-    (data3+3)->a=-4;
-    (data3+4)->a=-5;
-    (data3+5)->a=-6;
-
-    align_data data4[4];
-    data4->a=41;
-    (data4+1)->a=42;
-    (data4+2)->a=43;
-    (data4+3)->a=44;
-
-
-    ld_insert_first(hd,sizeof(data1),data1);
-    node* n = (node*) dec_to_pointer(hd->memory, 0);
-    printf("%ld\n",n->previous);
-
-
-    //printf("last->len: %ld \n", ((node*) ld_last(hd)) -> len); print 7
-
-    //printf("%ld \n", ((node*) ld_first(hd)) -> data[3].a); //print 4
-
-    ld_insert_first(hd,sizeof(data2),data2);
-    //printf("last->len: %ld \n", ((node*) ld_last(hd)) -> len);  print 7
-
-    printf("%ld\n",n->previous);
-    //printf("%ld \n", ((node*) ld_last(hd)) -> data[2].a);
-    
-
-    //printf("%ld \n", ((node*) ld_first(hd)) -> data[2].a); //print 30
-
-    ld_insert_first(hd,sizeof(data3),data3);
-    //printf("%ld \n", ((node*) ld_first(hd)) -> data[4].a); //print -5
-    //printf("last->len: %ld \n", ((node*) ld_last(hd)) -> len); //print 7
-
-
-   printf("%ld\n",n->previous);
-    //  printf("%d\n",index_of_node(hd,n));
-    
-    ld_insert_before(hd,n,sizeof(data4),data4);
-    
-    node* nn = (node*) ld_previous(hd,n);
-    printf("prevv : %ld\n",nn->data[2].a); // print 43
-
-    ld_delete_node(hd,n);
-
-    return 0;
-}

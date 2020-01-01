@@ -6,7 +6,6 @@
 #include <math.h>
 #include "projet2019.h"
 
-<<<<<<< HEAD
 static void* dec_to_pointer(void* p, ptrdiff_t dec){
     return ((align_data*)(p) + dec);
 }
@@ -21,11 +20,6 @@ static ptrdiff_t diff_node_AD(void* n1, void* n2){
     // difference entre de noeud en align_data
     return (align_data*) n1 - (align_data*) n2 ;
 } 
-=======
-#define min(a,b) (a<=b?a:b)
-#define NTRANCHES 1024
-#define nsize(x) (sizeof(x) + sizeof(node))
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
 
 size_t nb_blocs(size_t n){
     return ceil((double)n/(double)sizeof(align_data));
@@ -73,11 +67,7 @@ void* ld_create(size_t nboctets){
      if(noeud->next==0){
          return NULL;
      }else{
-<<<<<<< HEAD
         return (node*) (dec_to_pointer(noeud, noeud->next));
-=======
-         return (node*)(align_data*)(noeud + noeud->next);
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
      }
  }
 
@@ -90,11 +80,7 @@ void* ld_create(size_t nboctets){
      if(noeud->previous==0){
          return NULL;
      }else{
-<<<<<<< HEAD
         return (node*) (dec_to_pointer(noeud, noeud->previous));
-=======
-         return (node*)(align_data*)(noeud + noeud->previous);
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
      }
  }
 
@@ -127,23 +113,15 @@ static int index_of_node(void* liste, void* n){
     return i;
 }
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
 void* ld_insert_first(void* liste, size_t len, void* p_data){
     // len :taille du data
     head* hd=liste;
     node* new_node;
     node* first_node = ld_first(hd);
-<<<<<<< HEAD
    
    //le champ nb_bloc_libre me semble inutile??
-=======
-
-    
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
     if((hd->nb_bloc_libre) < nb_blocs(len)){
         return NULL;
     }
@@ -152,20 +130,11 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
 
     for(int i=0;i< hd->nb_elem_tab_tanches ;i++){
         if( tab_tranche[i].nb_blocs> nb_blocs(len)){
-<<<<<<< HEAD
             ptrdiff_t dec=tab_tranche[i].decalage;
             printf("dec: %ld\n",dec);
             new_node = (node*)(dec_to_pointer(hd->memory, dec)); 
-=======
-            int dec=tab_tranche[i].decalage;
-            printf("dec: %d\n",dec);
-            new_node = (node*)(align_data*)(hd->memory + dec); 
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
               
-            if(first_node!=NULL)
-                    printf("t1 %ld\n",first_node->len); //print la bonne valeur!
             new_node->previous=0;
-<<<<<<< HEAD
             if(first_node==NULL)    
                 new_node->next= 0;
             else
@@ -175,18 +144,6 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
 
             memmove(new_node->data , (align_data*) p_data , len);
 
-=======
-            
-            if(first_node!=NULL)
-                    printf("t2 %ld\n",first_node->len); //print la mauvaise valeur 0 !
-
-            new_node->next= hd->first - dec;
-            
-            new_node->len=len;
-            
-            memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
-
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
             if(first_node!=NULL){
                 first_node->previous = dec - hd->first;
             }
@@ -206,7 +163,6 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
             hd->nb_elem++;
             hd->nb_bloc_libre--;
 
-       
             return new_node;
              
         }
@@ -275,13 +231,8 @@ void* ld_insert_before(void* liste, void* n, size_t len, void* p_data){
     node* prev_node;
     if(curr->previous==0)
         return ld_insert_first(hd,len,p_data);
-    //donc prev n'est pas NULL
 
-<<<<<<< HEAD
     prev_node= (node*) ld_previous(hd,curr);
-=======
-    prev= (node*)ld_previous(hd,curr);
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
    
     if((hd->nb_bloc_libre) < nb_blocs(len)){
         return NULL;
@@ -296,7 +247,6 @@ void* ld_insert_before(void* liste, void* n, size_t len, void* p_data){
 
             new_node = (node*)(dec_to_pointer(hd->memory, dec)); 
               
-<<<<<<< HEAD
             new_node->previous= diff_node_AD(prev_node, new_node);
             new_node->next= diff_node_AD(curr, new_node);
             new_node->len= nb_blocs(len + sizeof(node));
@@ -306,17 +256,6 @@ void* ld_insert_before(void* liste, void* n, size_t len, void* p_data){
             curr->previous= diff_node_AD(new_node, curr);
 
             prev_node->next = diff_node_AD(new_node, prev_node);
-=======
-            new_node->previous= curr->previous + (curr-new_node);
-            new_node->next= curr-new_node;
-            new_node->len=len;
-            memmove(new_node->data , (align_data*) p_data , len-sizeof(node));
-             
-
-            curr->previous= new_node-curr;
-            
-            prev->next -= (curr - new_node); //la ligne qui provoque segmentation fault!
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
 
             tab_tranche[i].decalage += new_node->len;
             tab_tranche[i].nb_blocs -= nb_blocs(len);
@@ -410,7 +349,6 @@ int main(){
     (data3+4)->a=-5;
     (data3+5)->a=-6;
 
-<<<<<<< HEAD
     align_data data4[4];
     data4->a=41;
     (data4+1)->a=42;
@@ -448,32 +386,6 @@ int main(){
     
     node* nn = (node*) ld_previous(hd,n);
     printf("prevv : %ld\n",nn->data[2].a); // print 43
-=======
-    node* n = (node*)(align_data*)(hd->memory + 0);
 
-    ld_insert_first(hd,nsize(data1),data1);
-    printf("%ld\n",n->len);
-
-
-    //printf("last1 :%ld \n", ((node*) ld_last(hd)) -> len); 
-
-    //printf("%ld \n", ((node*) ld_first(hd)) -> data[3].a); //print 4
-
-    ld_insert_first(hd,nsize(data2),data2);
-
-    //printf("last2: %ld \n", ((node*) ld_last(hd)) -> len); bug
-    printf("%ld\n",n->len); //bug
-
-    //printf("%ld \n", ((node*) ld_first(hd)) -> data[2].a); //print 30
-
-    ld_insert_first(hd,nsize(data3),data3);
-    //printf("%ld \n", ((node*) ld_first(hd)) -> data[4].a); //print -5
-
-    //printf("last3 : %ld \n", ((node*) ld_last(hd)) -> len); bug
->>>>>>> 21bed873226f1b4a41ed6594fa546313d42208a8
-
-   printf("%ld\n",n->len); //bug
-    
-   // ld_insert_before(hd,n,nsize(data2),data2);
     return 0;
 }

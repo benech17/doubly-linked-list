@@ -1,6 +1,9 @@
 #ifndef PROJET2019_H
 #define PROJET2019_H
 
+#define NTRANCHES 1024
+#define min(a,b) (a<=b?a:b)
+
 typedef union {
     intmax_t a;
     void* adr;
@@ -23,10 +26,11 @@ typedef struct{
     void* memory;
     ptrdiff_t first;
     ptrdiff_t last;
-    tranche* libre;
     size_t size;    //size de la memoire pointée par memory
     size_t nb_elem; //nb elements dans la liste
     size_t nb_bloc_libre;
+    size_t nb_elem_tab_tanches; //nb de tranches actuelle dans tab_tanches (cb sur NTRANCHES )
+    tranche* libre;
 } head;
 
 extern size_t nb_blocs(size_t);

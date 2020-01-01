@@ -6,6 +6,24 @@
 #include <math.h>
 #include "projet2019.h"
 
+static int recherche_binaire(void* tab,int size,ptrdiff_t dec){
+    int left=0;
+    int right=size-1;
+    tranche* tab_tranche=tab;
+    while(1){
+        int mid=(right+left)/2;
+        if(mid==left || mid==right){
+            return mid;
+        } 
+        else if(dec<tab_tranche[mid].decalage){
+            right=mid;
+        }
+        else{
+            left=mid;
+        }
+    }
+    return -1;
+}
 static void* dec_to_pointer(void* p, ptrdiff_t dec){
     return ((align_data*)(p) + dec);
 }
@@ -36,6 +54,7 @@ void* ld_create(size_t nboctets){
     res->nb_bloc_libre=nb_blocs(nboctets);
     res->nb_elem=0;
     res->nb_elem_tab_tanches=1;
+    res->tab_tranches_size=NTRANCHES;
     tab_tranches[0].decalage=0;
     tab_tranches[0].nb_blocs=res->nb_bloc_libre;
     return res;
@@ -99,21 +118,6 @@ void* ld_create(size_t nboctets){
      memmove(v, cur->data , len*sizeof(align_data));
      return len*sizeof(align_data);
  }
-
-static int index_of_node(void* liste, void* n){
-    head* hd=liste;
-    node* nd=n;
-    node* curr=(node*)(align_data*)(hd->memory + hd->first);
-
-    int i=1;
-    while(curr!=NULL && curr!=nd){
-        //i+=curr->next;
-        curr=(node*)(align_data*)(hd->memory + curr->next);
-    }
-    return i;
-}
-
-
 
 void* ld_insert_first(void* liste, size_t len, void* p_data){
     // len :taille du data
@@ -322,10 +326,53 @@ void* ld_insert_after(void* liste, void* n, size_t len, void* p_data){
     return NULL;
 }
 
+void* ld_delete_node(void* liste, void* n){
+    head* hd =liste;
+    node* curr=n;
+    node* prev_node=ld_previous(hd,curr);
+    node* next_node=ld_next(hd,curr);
+    tranche* tab_tranche=hd->libre;
+    ptrdiff_t dec = diff_node_AD(curr,hd->memory);
+    int pos=recherche_binaire(tab_tranche,hd->nb_elem_tab_tanches,dec);
+
+    if( (tab_tranche[pos].decalage + tab_tranche[pos].nb_blocs) >=dec){  //fusion des tranches,elargissement
+        tab_tranche[pos].nb_blocs+= nb_blocs(curr->len);
+    }
+    else{
+        if(hd->tab_tranches_size == hd->nb_elem_tab_tanches){  //tableau de tranches remplie
+            hd->tab_tranches_size*=2; //double la taille
+        }       
+        memmove(  tab_tranche+pos+1  , tab_tranche+pos , hd->nb_elem_tab_tanches - pos );
+        hd->nb_elem_tab_tanches++;
+        tab_tranche[pos+1].decalage=dec;
+        tab_tranche[pos+1].nb_blocs=nb_blocs(curr->len);
+    }
+
+
+    if(curr->previous==0 && curr->next==0){
+        hd->first=0;
+        hd->last=0;
+        hd->nb_elem=0;
+    }
+    else if(curr->previous==0){
+        hd->first=dec + curr->next;
+        next_node->previous=0;
+    }
+    else if(curr->next==0){
+        hd->last=dec+curr->previous;
+        prev_node->next=0;
+    }
+    else{
+        prev_node->next=diff_node_AD(next_node,prev_node);
+        next_node->previous=diff_node_AD(prev_node,next_node);
+    }
+    return hd;
+}
 size_t ld_total_free_memory(void *liste){
     head* hd= liste;
     return (size_t)(hd->nb_bloc_libre * sizeof(align_data));
 }
+
 
 int main(){
     head* hd= ld_create(1000);
@@ -386,6 +433,8 @@ int main(){
     
     node* nn = (node*) ld_previous(hd,n);
     printf("prevv : %ld\n",nn->data[2].a); // print 43
+
+    ld_delete_node(hd,n);
 
     return 0;
 }

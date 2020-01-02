@@ -25,6 +25,7 @@ static int recherche_binaire(void* tab,int size,ptrdiff_t dec){
     }
     return -1;
 }
+
 void* dec_to_pointer(void* p, ptrdiff_t dec){
     return ((align_data*)(p) + dec);
 }
@@ -417,15 +418,25 @@ void *ld_compactify(void* liste){
     void* new_memory = malloc(hd->size);
     if(new_memory==NULL)
         return NULL;
-    
+
     ptrdiff_t pos=0;
     while(curr != NULL){
+        node* tmp = ld_next(hd, curr);
+        
+        if(curr->next !=0) curr->next = curr->len ;
+        if(curr->previous !=0) curr->previous = - ((node*) ld_previous(hd,curr) )->len;
+
         memmove( ((align_data*) (new_memory) + pos) , curr , (curr->len)*sizeof(align_data));
+        
         pos+= curr->len ;
-        curr = ld_next(hd, curr);
+        
+        curr= tmp;
+
     }
-    tab_tranche[0].decalage = pos + curr->len;
+    
+    tab_tranche[0].decalage = pos + ((node*) ld_last(hd))->len;
     tab_tranche[0].nb_blocs = hd->nb_bloc_libre;
+    
     free(hd->memory);
     hd->memory = new_memory;
     

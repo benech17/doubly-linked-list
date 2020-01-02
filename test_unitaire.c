@@ -7,21 +7,29 @@
 
 void print_data(int n,void* data){
     align_data* d=data;
-    for(int i=0;i<n;i++){
-        printf("|%ld", d[i].a);
+    printf("[");
+    for(int i=0;i<n-1;i++){
+        printf("%ld, ", d[i].a);
     }
+    printf("%ld]", d[n-1].a);
 }
 
 void print(void* liste){
+    head* hd=liste;
     node* noeud=ld_first(liste);
     int i=1;
+    printf("\n Head : ||first: %ld |last: %ld |size: %lu |nb_elem: %lu |nb_bloc_libre: %lu |tab_tranches_size: %lu |nb_elem_tab_tanches: %lu ||\n",
+        hd->first, hd->last, hd->size, hd->nb_elem, hd->nb_bloc_libre, hd->tab_tranches_size, hd->nb_elem_tab_tranches );
+
     while(noeud!=NULL){
         printf("node%d {",i++);
-        printf("next : %ld | prev: %ld | size: %lu| data: ", noeud->next, noeud->previous, noeud->len);
+        printf("next : %ld | prev: %ld | len: %lu | data: ", noeud->next, noeud->previous, noeud->len);
         print_data(noeud->len - nb_blocs(sizeof(node)), noeud->data);
-        printf("| }\n");
+        printf(" }\n");
         noeud= ld_next(liste,noeud);
     }
+
+    printf("total_free_memory: %lu Byte | total_useful_memory: %lu Byte \n", ld_total_free_memory(hd), ld_total_useful_memory(hd));
 }
 int main(){
     head* hd= ld_create(1000);
@@ -60,9 +68,11 @@ int main(){
 
     print(hd);
     
-    ld_delete_node(hd,ld_previous(hd,n));
+    ld_delete_node(hd,dec_to_pointer(hd->memory,20));
 
     print(hd);
+
+
 
     return 0;
 }

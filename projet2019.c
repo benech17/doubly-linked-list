@@ -384,5 +384,26 @@ void *ld_add_memory(void* liste, size_t nboctets){
 }
 
 void *ld_compactify(void* liste){
+    head* hd= liste;
+    tranche* tab_tranche = hd->libre;
+    node* curr = ld_first(hd);
     
+    void* new_memory = malloc(hd->size);
+    if(new_memory==NULL)
+        return NULL;
+    
+    ptrdiff_t pos=0;
+    while(curr != NULL){
+        memmove( ((align_data*) (new_memory) + pos) , curr , (curr->len)*sizeof(align_data));
+        pos+= curr->len ;
+        curr = ld_next(hd, curr);
+    }
+    tab_tranche[0].decalage = pos + curr->len;
+    tab_tranche[0].nb_blocs = hd->nb_bloc_libre;
+    hd->memory = new_memory;
+    hd->first= 0;
+    hd->last = pos;
+    hd->nb_elem_tab_tranches= 1;
+
+    return hd;
 }

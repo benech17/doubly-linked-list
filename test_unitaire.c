@@ -33,7 +33,7 @@ void print(void* liste){
 }
 int main(){
     head* hd= ld_create(1000);
-     align_data data1[5];
+    align_data data1[5];
     data1->a=11;
     (data1+1)->a=12;
     (data1+2)->a=13;

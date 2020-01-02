@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdbool.h>
 #include <math.h>
 #include "projet2019.h"
 
@@ -16,10 +17,10 @@ static int recherche_binaire(void* tab,int size,ptrdiff_t dec){
             return mid;
         } 
         else if(dec<tab_tranche[mid].decalage){
-            right=mid;
+            right=mid-1;
         }
         else{
-            left=mid;
+            left=mid+1;
         }
     }
     return -1;
@@ -128,7 +129,7 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
     for(int i=0;i< hd->nb_elem_tab_tranches ;i++){
         if( tab_tranche[i].nb_blocs> nb_blocs(len +sizeof(node))){
             ptrdiff_t dec=tab_tranche[i].decalage;
-            printf("dec: %ld\n",dec);
+            printf("first dec: %ld\n",dec);
             new_node = (node*)(dec_to_pointer(hd->memory, dec)); 
               
             new_node->previous=0;
@@ -179,6 +180,7 @@ void* ld_insert_last(void* liste, size_t len, void* p_data){
         if( tab_tranche[i].nb_blocs> nb_blocs(len + sizeof(node))){
             ptrdiff_t dec=tab_tranche[i].decalage;
             new_node = (node*) dec_to_pointer(hd->memory, dec); 
+            printf("last dec: %ld\n",dec);
               
             
             new_node->next= 0;
@@ -313,22 +315,46 @@ void* ld_delete_node(void* liste, void* n){
     node* next_node=ld_next(hd,curr);
     tranche* tab_tranche=hd->libre;
     ptrdiff_t dec = diff_node_AD(curr,hd->memory);
-    int pos=recherche_binaire(tab_tranche,hd->nb_elem_tab_tranches,dec);
+    int pos=recherche_binaire(tab_tranche,hd->nb_elem_tab_tranches,dec); // la position de la tranche ayant le plus grand decalage mais aussi inferieur au noeud
 
     hd->nb_bloc_libre += curr->len;
     hd->nb_elem--;
-    
-    if( (tab_tranche[pos].decalage + tab_tranche[pos].nb_blocs) >=dec){  //fusion des tranches,elargissement
+    bool is_merged=false;
+    ptrdiff_t tab_dec = tab_tranche[pos].decalage ;
+    printf(" \n tab_dec dec: %ld %ld\n",tab_dec,dec);
+    if( tab_dec<=dec  &&  (tab_dec + tab_tranche[pos].nb_blocs) >=dec){  //fusion à gauche des tranches,elargissement
         tab_tranche[pos].nb_blocs+= curr->len;
+        is_merged=true;
     }
-    else{
+    if( tab_dec> dec && (dec + curr->len >= tab_dec)){ //fusion à droite 
+        tab_tranche[pos].decalage=dec;
+        tab_tranche[pos].nb_blocs+= curr->len;
+        is_merged=true;
+
+    }
+    if( (pos+1<hd->nb_elem_tab_tranches) &&  (tab_tranche[pos+1].decalage >= dec) &&     
+         ( dec+curr->len >= tab_tranche[pos+1].decalage) ){ //fusion à droite 
+        tab_tranche[pos+1].decalage=dec;
+        tab_tranche[pos+1].nb_blocs+= curr->len;
+        is_merged=true;
+    }
+    if(!is_merged){
         if(hd->tab_tranches_size == hd->nb_elem_tab_tranches){  //tableau de tranches remplie
             hd->tab_tranches_size*=2; //double la taille
         }       
-        memmove(  tab_tranche+pos+1  , tab_tranche+pos , hd->nb_elem_tab_tranches - pos );
+
+        if(dec < tab_dec){
+            memmove(  tab_tranche+pos+1  , tab_tranche+pos , sizeof(tranche)* (hd->nb_elem_tab_tranches - pos) );
+            tab_tranche[pos].decalage=dec;
+            tab_tranche[pos].nb_blocs= curr->len;
+        }      
+        else{
+            memmove(  tab_tranche+pos+2  , tab_tranche+pos+1 , sizeof(tranche)*(hd->nb_elem_tab_tranches - pos -1) );
+            tab_tranche[pos+1].decalage=dec;
+            tab_tranche[pos+1].nb_blocs= curr->len;
+        }
+
         hd->nb_elem_tab_tranches++;
-        tab_tranche[pos+1].decalage=dec;
-        tab_tranche[pos+1].nb_blocs= curr->len;
     }
 
 

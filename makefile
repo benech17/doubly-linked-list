@@ -1,10 +1,8 @@
 CC=gcc
-CFLAGS =-Wall -std=c11 -o -lm
-SRC=$(wildcard *.c)
-EXEC=$(SRC:.c=.o)
-all:$(EXEC)
-%.o:%.c
-	@$(CC) $< $(CFLAGS) $@
+CFLAGS= -g -Wall -std=c11 -o 
 
-cleanall:
+exec:test_unitaire.c projet2019.c 
+	$(CC)  $(CFLAGS)  exec.o test_unitaire.c projet2019.c -lm
+
+clean:
 	@rm -rf *.o

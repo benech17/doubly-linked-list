@@ -368,4 +368,21 @@ size_t ld_total_useful_memory(void* liste){
     return res;
 }
 
+void *ld_add_memory(void* liste, size_t nboctets){
+    head* hd= liste;
+    tranche* tab_tranche = hd->libre;
+    if(nboctets<0)
+        return NULL;
+    size_t no = nb_blocs(nboctets) * sizeof(align_data);
+    size_t tab_size = hd->nb_elem_tab_tranches;
+    tab_tranche[tab_size].decalage= nb_blocs(hd->size);
+    tab_tranche[tab_size].nb_blocs= nb_blocs(no);
+    hd->size += no;
+    hd->nb_elem++;
+    hd->nb_bloc_libre += nb_blocs(no);
+    return hd;
+}
 
+void *ld_compactify(void* liste){
+    
+}

@@ -47,7 +47,7 @@ size_t nb_blocs(size_t n){
 
 void* ld_create(size_t nboctets){
     tranche* tab_tranches =malloc(NTRANCHES * sizeof(tranche));
-    head* res=malloc(sizeof(head));
+    head* res=malloc(sizeof(head) * 2);
     res->size=nb_blocs(nboctets)*sizeof(align_data);
     res->memory=malloc(res->size);
     res->first=0;
@@ -426,7 +426,9 @@ void *ld_compactify(void* liste){
     }
     tab_tranche[0].decalage = pos + curr->len;
     tab_tranche[0].nb_blocs = hd->nb_bloc_libre;
+    free(hd->memory);
     hd->memory = new_memory;
+    
     hd->first= 0;
     hd->last = pos;
     hd->nb_elem_tab_tranches= 1;

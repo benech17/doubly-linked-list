@@ -73,6 +73,7 @@ int main(){
     print(hd);
 
 
+    ld_destroy(hd);
 
     return 0;
 }

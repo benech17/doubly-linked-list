@@ -32,55 +32,58 @@ void print(void* liste){
     printf("total_free_memory: %lu Byte | total_useful_memory: %lu Byte \n", ld_total_free_memory(hd), ld_total_useful_memory(hd));
 }
 
-align_data* create_data(int size,int first){
-    align_data* data= malloc(size * sizeof(align_data));
+void create_data(int size,int first,align_data* data){
     for(int i=0;i<size;i++){
         (data+i)->a=first++;
     }
-    return data;
 }
 
 int main()
 {
+    const size_t size = 3;
     head *hd = ld_create(10000);
+    align_data data1[size], data10[size], data20[size], data30[size], data40[size], data50[size], data60[size];
+    align_data data70[size], data80[size], data90[size], data100[size], data110[size], data120[size];
+    align_data data130[size], data140[size], data150[size],data160[size] ,data170[size];
 
-    align_data* data1 =create_data(3,1);
-    align_data* data10 =create_data(3,11);
-    align_data* data20 =create_data(3,21);
-    align_data* data30 =create_data(3,31);
-    align_data* data40 =create_data(3,41);
-    align_data* data50 =create_data(3,51);
-    align_data* data60 =create_data(3,61);
-    align_data* data70 =create_data(3,71);
-    align_data* data80 =create_data(3,81);
-    align_data* data90 =create_data(3,91);
-    align_data* data100 =create_data(3,101);
-    align_data* data110 =create_data(3,111);
-    align_data* data120 =create_data(3,121);
-    align_data* data130 =create_data(3,131);
-    align_data* data140 =create_data(3,141);
-    align_data* data150 =create_data(3,151);
-    align_data* data160 =create_data(3,161);
-    align_data* data170 =create_data(3,171);
+    create_data(size,1,data1);
+    create_data(size,11,data10);
+    create_data(size,21,data20);
+    create_data(size,31,data30);
+    create_data(size,41,data40);
+    create_data(size,51,data50);
+    create_data(size,61,data60);
+    create_data(size,71,data70);
+    create_data(size,81,data80);
+    create_data(size,91,data90);
+    create_data(size,101,data100);
+    create_data(size,111,data110);
+    create_data(size,121,data120);
+    create_data(size,131,data130);
+    create_data(size,141,data140);
+    create_data(size,151,data150);
+    create_data(size,161,data160);
+    create_data(size,171,data170);
 
-    ld_insert_first(hd,3*sizeof(align_data),data1);
-    ld_insert_last(hd,3*sizeof(align_data),data10);
-    ld_insert_first(hd,3*sizeof(align_data),data20);
-    ld_insert_last(hd,3*sizeof(align_data),data30);
-    ld_insert_first(hd,3*sizeof(align_data),data40);
-    ld_insert_first(hd,3*sizeof(align_data),data50);
-    ld_insert_first(hd,3*sizeof(align_data),data60);
-    ld_insert_last(hd,3*sizeof(align_data),data70);
-    ld_insert_last(hd,3*sizeof(align_data),data80);
-    ld_insert_first(hd,3*sizeof(align_data),data90);
-    ld_insert_last(hd,3*sizeof(align_data),data100);
-    ld_insert_first(hd,3*sizeof(align_data),data110);
-    ld_insert_last(hd,3*sizeof(align_data),data120);
-    ld_insert_first(hd,3*sizeof(align_data),data130);
-    ld_insert_first(hd,3*sizeof(align_data),data140);
-    ld_insert_first(hd,3*sizeof(align_data),data150);
-    ld_insert_last(hd,3*sizeof(align_data),data160);
-    ld_insert_last(hd,3*sizeof(align_data),data170);
+
+    ld_insert_first(hd,size*sizeof(align_data),data1);
+    ld_insert_last(hd,size*sizeof(align_data),data10);
+    ld_insert_first(hd,size*sizeof(align_data),data20);
+    ld_insert_last(hd,size*sizeof(align_data),data30);
+    ld_insert_first(hd,size*sizeof(align_data),data40);
+    ld_insert_first(hd,size*sizeof(align_data),data50);
+    ld_insert_first(hd,size*sizeof(align_data),data60);
+    ld_insert_last(hd,size*sizeof(align_data),data70);
+    ld_insert_last(hd,size*sizeof(align_data),data80);
+    ld_insert_first(hd,size*sizeof(align_data),data90);
+    ld_insert_last(hd,size*sizeof(align_data),data100);
+    ld_insert_first(hd,size*sizeof(align_data),data110);
+    ld_insert_last(hd,size*sizeof(align_data),data120);
+    ld_insert_first(hd,size*sizeof(align_data),data130);
+    ld_insert_first(hd,size*sizeof(align_data),data140);
+    ld_insert_first(hd,size*sizeof(align_data),data150);
+    ld_insert_last(hd,size*sizeof(align_data),data160);
+    ld_insert_last(hd,size*sizeof(align_data),data170);
 
     ld_delete_node(hd,dec_to_pointer(hd->memory,25)); //delete data50 
     ld_delete_node(hd,dec_to_pointer(hd->memory,35)); //delete data70
@@ -89,12 +92,9 @@ int main()
     ld_delete_node(hd,ld_first(hd)); //delete data140,first
     ld_delete_node(hd,ld_last(hd)); //delete data160,last
     
-
-
-
-
-
     print(hd);
+
+    ld_destroy(hd);
 
     return 0;
 }

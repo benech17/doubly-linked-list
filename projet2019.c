@@ -130,7 +130,7 @@ void* ld_insert_first(void* liste, size_t len, void* p_data){
     for(int i=0;i< hd->nb_elem_tab_tranches ;i++){
         if( tab_tranche[i].nb_blocs> nb_blocs(len +sizeof(node))){
             ptrdiff_t dec=tab_tranche[i].decalage;
-            printf("first dec: %ld\n",dec);
+            printf("+ insert_first at dec: %ld\n",dec);
             new_node = (node*)(dec_to_pointer(hd->memory, dec)); 
               
             new_node->previous=0;
@@ -181,8 +181,8 @@ void* ld_insert_last(void* liste, size_t len, void* p_data){
         if( tab_tranche[i].nb_blocs> nb_blocs(len + sizeof(node))){
             ptrdiff_t dec=tab_tranche[i].decalage;
             new_node = (node*) dec_to_pointer(hd->memory, dec); 
-            printf("last dec: %ld\n",dec);
-              
+            printf("+ insert_last at dec: %ld\n",dec);
+
             
             new_node->next= 0;
             if(last_node==NULL)    
@@ -234,7 +234,8 @@ void* ld_insert_before(void* liste, void* n, size_t len, void* p_data){
     for(int i=0;i< hd->nb_elem_tab_tranches ;i++){
         if( tab_tranche[i].nb_blocs> nb_blocs(len + sizeof(node))){
             ptrdiff_t dec=tab_tranche[i].decalage;
-            printf("dec: %ld\n",dec);
+            printf("+ insert_before at dec: %ld\n",dec);
+
 
             new_node = (node*)(dec_to_pointer(hd->memory, dec)); 
               
@@ -282,6 +283,7 @@ void* ld_insert_after(void* liste, void* n, size_t len, void* p_data){
         if( tab_tranche[i].nb_blocs> nb_blocs(len + sizeof(node))){
             ptrdiff_t dec=tab_tranche[i].decalage;
             new_node = (node*)(dec_to_pointer(hd->memory, dec)); 
+            printf("+ insert_after at dec: %ld\n",dec);
               
             new_node->previous= diff_node_AD(curr, new_node);
             new_node->next= diff_node_AD(next_node, new_node);
@@ -316,13 +318,15 @@ void* ld_delete_node(void* liste, void* n){
     node* next_node=ld_next(hd,curr);
     tranche* tab_tranche=hd->libre;
     ptrdiff_t dec = diff_node_AD(curr,hd->memory);
+    printf("X delete_node at dec: %ld\n",dec);
+
     int pos=recherche_binaire(tab_tranche,hd->nb_elem_tab_tranches,dec); // la position de la tranche ayant le plus grand decalage mais aussi inferieur au noeud
 
     hd->nb_bloc_libre += curr->len;
     hd->nb_elem--;
     bool is_merged=false;
     ptrdiff_t tab_dec = tab_tranche[pos].decalage ;
-    printf(" \n tab_dec dec: %ld %ld\n",tab_dec,dec);
+    //printf(" \n tab_dec dec: %ld %ld\n",tab_dec,dec);
     if( tab_dec<=dec  &&  (tab_dec + tab_tranche[pos].nb_blocs) >=dec){  //fusion à gauche des tranches,elargissement
         tab_tranche[pos].nb_blocs+= curr->len;
         is_merged=true;

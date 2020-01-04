@@ -65,6 +65,8 @@ int main()
 
     print_list(hd);
 
+    printf("p %ld \n", ((node*) get_node_at(hd,4))->data[0].a); //print data40
+    
     ld_destroy(hd);
 
     return 0;

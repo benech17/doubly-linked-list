@@ -56,5 +56,6 @@ extern void* ld_compactify(void*);
 extern void* dec_to_pointer(void*, ptrdiff_t);
 extern void print_list(void* liste);
 extern void create_data(int, int, align_data*);
+extern void* get_node_at(void*, int);
 
 #endif

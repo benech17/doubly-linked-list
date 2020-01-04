@@ -328,7 +328,7 @@ void* ld_delete_node(void* liste, void* n){
     tranche* tab_tranche=hd->libre;
     ptrdiff_t dec = diff_node_AD(curr,hd->memory);
     printf("X delete_node at dec: %ld\n",dec);
-
+    
     int pos=recherche_binaire(tab_tranche,hd->nb_elem_tab_tranches,dec); // la position de la tranche ayant le plus grand decalage mais aussi inferieur au noeud
 
     hd->nb_bloc_libre += curr->len;
@@ -444,7 +444,7 @@ void *ld_add_memory(void* liste, size_t nboctets){
     return hd;
 }
 
-void *ld_compactify(void* liste){
+void* ld_compactify(void* liste){
     head* hd= liste;
     tranche* tab_tranche = hd->libre;
     node* curr = ld_first(hd);
@@ -479,6 +479,20 @@ void *ld_compactify(void* liste){
     hd->nb_elem_tab_tranches= 1;
 
     return hd;
+}
+
+void* get_node_at(void* liste, int pos){
+    printf("\n# get %dth node\n", pos+1);
+    head* hd=liste;
+    node* curr= ld_first(hd);
+    if(curr==NULL || pos<0 || pos>= hd->nb_elem)
+        return NULL;
+    while(pos>0){
+        curr = ld_next(hd,curr);
+        pos--;
+    }
+
+    return curr;
 }
 
 static void print_data(int n,void* data){

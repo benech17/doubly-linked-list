@@ -335,7 +335,7 @@ void* ld_delete_node(void* liste, void* n){
     hd->nb_elem--;
     bool is_merged=false;
     ptrdiff_t tab_dec = tab_tranche[pos].decalage ;
-    //printf(" \n tab_dec dec: %ld %ld\n",tab_dec,dec);
+    
     if( tab_dec<=dec  &&  (tab_dec + tab_tranche[pos].nb_blocs) >=dec){  //fusion à gauche des tranches,elargissement
         tab_tranche[pos].nb_blocs+= curr->len;
         is_merged=true;

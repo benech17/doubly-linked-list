@@ -54,6 +54,7 @@ extern size_t ld_total_useful_memory(void*);
 extern void* ld_add_memory(void*, size_t);
 extern void* ld_compactify(void*);
 extern void* dec_to_pointer(void*, ptrdiff_t);
-
+extern void print_list(void* liste);
+extern void create_data(int, int, align_data*);
 
 #endif

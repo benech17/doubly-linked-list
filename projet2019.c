@@ -42,6 +42,15 @@ static ptrdiff_t diff_node_AD(void* n1, void* n2){
     return (align_data*) n1 - (align_data*) n2 ;
 } 
 
+static void* double_tab_tranche(void* liste){
+    head* hd=liste;
+    void* new_tab = realloc(hd->libre, 2*hd->tab_tranches_size * sizeof(tranche));
+    if(new_tab == NULL) return NULL;
+    hd->libre = new_tab;
+    hd->tab_tranches_size *=2;
+    return new_tab;
+}
+
 size_t nb_blocs(size_t n){
     return ceil((double)n/(double)sizeof(align_data));
 }
@@ -345,7 +354,9 @@ void* ld_delete_node(void* liste, void* n){
     }
     if(!is_merged){
         if(hd->tab_tranches_size == hd->nb_elem_tab_tranches){  //tableau de tranches remplie
-            hd->tab_tranches_size*=2; //double la taille
+            void* tmp_tab = double_tab_tranche(hd); //double la taille de tab_tranche
+            if(tmp_tab==NULL)
+                return NULL;
         }       
 
         if(dec < tab_dec){
@@ -401,16 +412,35 @@ size_t ld_total_useful_memory(void* liste){
 
 void *ld_add_memory(void* liste, size_t nboctets){
     head* hd= liste;
-    tranche* tab_tranche = hd->libre;
-    if(nboctets<0)
-        return NULL;
+
+    printf("\n# adding %ld Byte to memory\n", nboctets);
+
+
+    size_t last_dec = hd->size;
     size_t no = nb_blocs(nboctets) * sizeof(align_data);
-    size_t tab_size = hd->nb_elem_tab_tranches;
-    tab_tranche[tab_size].decalage= nb_blocs(hd->size);
-    tab_tranche[tab_size].nb_blocs= nb_blocs(no);
+    void* new_memory=realloc(hd->memory, no + hd->size);
+    
+    if(nboctets<0 || new_memory==NULL)
+        return NULL;
+    
+    hd->memory = new_memory;
+
+    tranche* tab_tranche = hd->libre;
+
+    size_t tab_size = hd->tab_tranches_size, tab_nb = hd->nb_elem_tab_tranches;
+
+    if(tab_size == tab_nb){  //tableau de tranches remplie
+        void* tmp_tab = double_tab_tranche(hd); //double la taille de tab_tranche
+        if(tmp_tab==NULL)
+            return NULL;
+    } 
+    tab_tranche[tab_nb].decalage= nb_blocs(last_dec);
+    tab_tranche[tab_nb].nb_blocs= nb_blocs(no);
     hd->size += no;
-    hd->nb_elem++;
     hd->nb_bloc_libre += nb_blocs(no);
+    hd->nb_elem_tab_tranches++;
+
+    
     return hd;
 }
 
@@ -449,4 +479,37 @@ void *ld_compactify(void* liste){
     hd->nb_elem_tab_tranches= 1;
 
     return hd;
+}
+
+static void print_data(int n,void* data){
+    align_data* d=data;
+    printf("[");
+    for(int i=0;i<n-1;i++){
+        printf("%ld, ", d[i].a);
+    }
+    printf("%ld]", d[n-1].a);
+}
+
+void print_list(void* liste){
+    head* hd=liste;
+    node* noeud=ld_first(liste);
+    int i=1;
+    printf("\nHead : ||first: %ld |last: %ld |size: %lu |nb_elem: %lu |nb_bloc_libre: %lu |tab_tranches_size: %lu |nb_elem_tab_tanches: %lu ||\n",
+        hd->first, hd->last, hd->size, hd->nb_elem, hd->nb_bloc_libre, hd->tab_tranches_size, hd->nb_elem_tab_tranches );
+
+    while(noeud!=NULL){
+        printf(" node%d {",i++);
+        printf("next : %ld | prev: %ld | len: %lu | data: ", noeud->next, noeud->previous, noeud->len);
+        print_data(noeud->len - nb_blocs(sizeof(node)), noeud->data);
+        printf(" }\n");
+        noeud= ld_next(liste,noeud);
+    }
+
+    printf(" total_free_memory: %lu Byte | total_useful_memory: %lu Byte \n", ld_total_free_memory(hd), ld_total_useful_memory(hd));
+}
+
+void create_data(int size,int first,align_data* data){
+    for(int i=0;i<size;i++){
+        data[i].a=first++;
+    }
 }

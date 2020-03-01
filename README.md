@@ -3,7 +3,7 @@
 this implementation only uses a single memory array to store all the nodes and do not use a malloc (memory allocation) for every node that is created.
 As a result,this implementation is optimal in memory and time complexity.
 
-All the project documentation is on the file Sujet_projet_ver08.pdf.
+All the project documentation is  [here](Sujet_projet_ver08.pdf).
 
 ------------------
 
